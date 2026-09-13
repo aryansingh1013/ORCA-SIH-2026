@@ -13,7 +13,18 @@ import '../cache/cache_service.dart';
 /// host laptop. The emulator reaches the host through the special alias
 /// `10.0.2.2`, so Android defaults to that. Web/desktop keep `127.0.0.1`.
 String defaultOrcaBoxUrl() {
-  if (!kIsWeb && Platform.isAndroid) {
+  if (kIsWeb) {
+    // When the web bundle is served by the ORCA Box itself (e.g. a remote
+    // preview host), the API lives on the same origin as the page. Keep the
+    // 127.0.0.1 default only for local `flutter run -d chrome` development.
+    final origin = Uri.base;
+    final isLocalDev = origin.host == 'localhost' || origin.host == '127.0.0.1';
+    if (origin.hasScheme && origin.host.isNotEmpty && !isLocalDev) {
+      return origin.origin;
+    }
+    return AppConfig.defaultBaseUrl;
+  }
+  if (Platform.isAndroid) {
     return AppConfig.androidEmulatorUrl;
   }
   return AppConfig.defaultBaseUrl;
